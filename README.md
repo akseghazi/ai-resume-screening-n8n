@@ -161,16 +161,12 @@ Sheets     Sheets   Sheets
 ### Complete Workflow
 ![image alt](https://github.com/akseghazi/ai-resume-screening-n8n/blob/c3bf0c0e0e35851c25c4ff5583287dcd8e36dcca/screenshots/complete-workflow.jpg)
 
-### AI Screening Result
-
-
 ### Shortlisted Candidate
 
 ![image alt](https://github.com/akseghazi/ai-resume-screening-n8n/blob/7e5440a844329827367d4de88e811b76410ea596/screenshots/shortlist-result.jpg)
 
-
 ### Review Candidate
-
+![image alt](https://github.com/akseghazi/ai-resume-screening-n8n/blob/c6bb01be06802d6e6c9405bf645d8d9bd9c7e18c/screenshots/human-review-result.jpg)
 
 ### Candidate Database
 
