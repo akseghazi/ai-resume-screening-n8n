@@ -163,7 +163,7 @@ Sheets     Sheets   Sheets
 
 ### AI Screening Result
 
-
+![image alt](https://github.com/akseghazi/ai-resume-screening-n8n/blob/7e5440a844329827367d4de88e811b76410ea596/screenshots/shortlist-result.jpg)
 
 ### Shortlisted Candidate
 
