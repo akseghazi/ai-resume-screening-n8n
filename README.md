@@ -159,7 +159,7 @@ Sheets     Sheets   Sheets
 ## 📸 Screenshots
 
 ### Complete Workflow
-
+![image alt](https://github.com/akseghazi/ai-resume-screening-n8n/blob/c3bf0c0e0e35851c25c4ff5583287dcd8e36dcca/screenshots/complete-workflow.jpg)
 
 ### AI Screening Result
 
