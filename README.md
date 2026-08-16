@@ -177,7 +177,7 @@ Sheets     Sheets   Sheets
 
 
 ### Dynamic Job Description
-
+![image alt](https://github.com/akseghazi/ai-resume-screening-n8n/blob/21db74de8d3e4925483399d8d05345b038dcb313/screenshots/dynamic%20job%20description.jpg)
 
 ---
 
