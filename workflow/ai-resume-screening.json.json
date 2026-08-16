@@ -1,0 +1,978 @@
+{
+  "name": "resume screening",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resume-screening",
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e0620067-123e-4cb0-9fbb-76461e6e4154",
+      "name": "Webhook",
+      "webhookId": "ed01a1ae-88db-473e-aeb2-c2c50a9ca3f8"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ddad0168-7796-47d8-b3cc-9bfc96276cf7",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "456ec6b4-133d-4240-9c59-63f47bf191f1",
+              "name": "job_title",
+              "value": "={{ $('Webhook').item.json.body.job_title }}",
+              "type": "string"
+            },
+            {
+              "id": "2c05662c-3444-401f-808d-6366a6384f48",
+              "name": "job_description",
+              "value": "={{ $('Webhook').item.json.body.job_description }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        416,
+        0
+      ],
+      "id": "5c1495bc-6c78-4c86-b66f-f406da7182fa",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an automated Applicant Tracking System (ATS).\n\nYour ONLY task is to evaluate the candidate resume against the job description and return the evaluation using the Structured Output Parser.\n\nDO NOT write a paragraph.\nDO NOT write an explanation outside the structured output.\nDO NOT use Markdown.\nDO NOT use headings.\nDO NOT add any text before or after the structured output.\n\n========================\nJOB TITLE\n========================\n\n{{ $json.job_title }}\n\n========================\nJOB DESCRIPTION\n========================\n\n{{ $json.job_description }}\n\n========================\nCANDIDATE RESUME\n========================\n\n{{ $json.text }}\n\n========================\nEVALUATION RULES\n========================\n\nEvaluate the candidate ONLY against the provided job description.\n\nCalculate the score out of 100 using:\n\nRequired Skills Match = 40 points\nProfessional Experience = 25 points\nRelevant Projects = 15 points\nEducation = 10 points\nPreferred Skills = 10 points\n\nTOTAL = 100 points\n\nRequired skills are more important than preferred skills.\n\nDo NOT assume a skill exists if it is not explicitly mentioned or clearly demonstrated in the resume.\n\nFor example:\nIf the job requires AWS but the resume does not mention AWS, AWS must NOT be counted as a matching skill.\n\n========================\nRECOMMENDATION RULES\n========================\n\nScore 90-100:\nSHORTLIST\n\nScore 70-89:\nREVIEW\n\nScore 0-69:\nREJECT\n\n========================\nFIELD RULES\n========================\n\ncandidate_name:\nExtract the candidate's name from the resume.\n\nemail:\nExtract the candidate's email.\nIf unavailable, use \"Not provided\".\n\nphone:\nExtract the candidate's phone number.\nIf unavailable, use \"Not provided\".\n\neducation:\nExtract the candidate's highest relevant education.\nIf unavailable, use \"Not provided\".\n\nexperience_years:\nReturn the number of relevant professional experience years.\nIf unavailable, return 0.\n\ntechnical_skills:\nReturn the technical skills explicitly mentioned in the resume.\n\nmatching_required_skills:\nReturn ONLY required skills from the job description that are present in the resume.\n\nmissing_required_skills:\nReturn required skills from the job description that are NOT present in the resume.\n\nmatching_preferred_skills:\nReturn preferred skills from the job description that are present in the resume.\n\nstrengths:\nReturn a list of the candidate's strongest qualifications relevant to this job.\n\nweaknesses:\nReturn a list of relevant gaps or weaknesses.\n\nscore:\nReturn ONLY a number from 0 to 100.\n\nrecommendation:\nReturn ONLY one of:\nSHORTLIST\nREVIEW\nREJECT\n\nreason:\nReturn ONE short sentence explaining why the candidate received the score.\n\n========================\nFINAL INSTRUCTION\n========================\n\nReturn ONLY the fields required by the Structured Output Parser.\n\nDo not return a paragraph.\nDo not return Markdown.\nDo not add any extra fields.\nReturn the result strictly according to the Structured Output Parser schema.\n\nThe score must be a number between 0 and 100.\n\nThe recommendation must be exactly one of:\n\nSHORTLIST\nREVIEW\nREJECT",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        624,
+        0
+      ],
+      "id": "70f8d251-9caf-4c73-916b-f2c4fc74ec55",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        208
+      ],
+      "id": "15f6d5ba-2bd2-44f1-a5f0-df696d2d6b79",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RabLG0MaIiBPWEfJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"candidate_name\": \"Ali Khan\",\n  \"email\": \"ali.khan@example.com\",\n  \"phone\": \"+92 300 1234567\",\n  \"education\": \"Bachelor of Science in Computer Science\",\n  \"experience_years\": 3,\n  \"technical_skills\": [\n    \"Python\",\n    \"n8n\",\n    \"REST APIs\",\n    \"SQL\"\n  ],\n  \"matching_required_skills\": [\n    \"Python\",\n    \"n8n\",\n    \"REST APIs\",\n    \"SQL\"\n  ],\n  \"missing_required_skills\": [\n    \"AWS\"\n  ],\n  \"matching_preferred_skills\": [\n    \"Docker\",\n    \"Git\",\n    \"Supabase\",\n    \"PostgreSQL\"\n  ],\n  \"strengths\": [\n    \"Strong automation experience\",\n    \"Relevant technical skills\"\n  ],\n  \"weaknesses\": [\n    \"Limited AWS experience\"\n  ],\n  \"score\": 88,\n  \"recommendation\": \"SHORTLIST\",\n  \"reason\": \"The candidate matches most of the required skills and has relevant automation experience.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        768,
+        208
+      ],
+      "id": "61eb8086-f529-489f-a180-4a3cb13905d2",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.recommendation }}",
+                    "rightValue": "SHORTLIST",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "144d6e97-a68d-4a76-9f87-1ea56fc8caae"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a60fc6be-cfc5-4a4e-ac29-0b4b56edeafc",
+                    "leftValue": "={{ $json.output.recommendation }}",
+                    "rightValue": "REVIEW",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b3fcd7cc-fc63-46fa-a86f-f15f48953faa",
+                    "leftValue": "={{ $json.output.recommendation }}",
+                    "rightValue": "REJECT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1072,
+        -16
+      ],
+      "id": "b686a529-e990-499a-ac8c-c903c90b6017",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jtGE6_p3qD8KrfZGXT4cg2Ilb4HfGSoqbYz_T8eKgJc",
+          "mode": "list",
+          "cachedResultName": "AI Resume Screening Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jtGE6_p3qD8KrfZGXT4cg2Ilb4HfGSoqbYz_T8eKgJc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Candidates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jtGE6_p3qD8KrfZGXT4cg2Ilb4HfGSoqbYz_T8eKgJc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Candidate Name": "={{ $json.output.candidate_name }}",
+            "Email": "={{ $json.output.email }}",
+            "Phone": "={{ $json.output.phone }}",
+            "Education": "={{ $json.output.education }}",
+            "Experience Years": "={{ $json.output.experience_years }}",
+            "Technical Skills": "={{ $json.output.technical_skills }}",
+            "Matching Required Skills": "={{ $json.output.matching_required_skills }}",
+            "Missing Required Skills": "={{ $json.output.missing_required_skills }}",
+            "Matching Preferred Skills": "={{ $json.output.matching_preferred_skills }}",
+            "Strengths": "={{ $json.output.strengths }}",
+            "Weaknesses": "={{ $json.output.weaknesses }}",
+            "Score": "={{ $json.output.score }}",
+            "Recommendation": "={{ $json.output.recommendation }}",
+            "Reason": "={{ $json.output.reason }}",
+            "screening date": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Candidate Name",
+              "displayName": "Candidate Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Education",
+              "displayName": "Education",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Experience Years",
+              "displayName": "Experience Years",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Technical Skills",
+              "displayName": "Technical Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Matching Required Skills",
+              "displayName": "Matching Required Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Missing Required Skills",
+              "displayName": "Missing Required Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Matching Preferred Skills",
+              "displayName": "Matching Preferred Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Strengths",
+              "displayName": "Strengths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Weaknesses",
+              "displayName": "Weaknesses",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Recommendation",
+              "displayName": "Recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "screening date",
+              "displayName": "screening date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1408,
+        -160
+      ],
+      "id": "2d89bcdb-f574-4041-acc8-e0bce4f54bb9",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "s3KJloaOysfg5RS5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jtGE6_p3qD8KrfZGXT4cg2Ilb4HfGSoqbYz_T8eKgJc",
+          "mode": "list",
+          "cachedResultName": "AI Resume Screening Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jtGE6_p3qD8KrfZGXT4cg2Ilb4HfGSoqbYz_T8eKgJc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Candidates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jtGE6_p3qD8KrfZGXT4cg2Ilb4HfGSoqbYz_T8eKgJc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Candidate Name": "={{ $('Basic LLM Chain').item.json.output.candidate_name }}",
+            "Email": "={{ $('Basic LLM Chain').item.json.output.email }}",
+            "Phone": "={{ $('Basic LLM Chain').item.json.output.phone }}",
+            "Education": "={{ $('Basic LLM Chain').item.json.output.education }}",
+            "Experience Years": "={{ $('Basic LLM Chain').item.json.output.experience_years }}",
+            "Technical Skills": "={{ $('Basic LLM Chain').item.json.output.technical_skills }}",
+            "Matching Required Skills": "={{ $('Basic LLM Chain').item.json.output.matching_required_skills }}",
+            "Missing Required Skills": "={{ $('Basic LLM Chain').item.json.output.missing_required_skills }}",
+            "Matching Preferred Skills": "={{ $('Basic LLM Chain').item.json.output.matching_preferred_skills }}",
+            "Strengths": "={{ $('Basic LLM Chain').item.json.output.strengths }}",
+            "Weaknesses": "={{ $('Basic LLM Chain').item.json.output.weaknesses }}",
+            "Score": "={{ $('Basic LLM Chain').item.json.output.score }}",
+            "Recommendation": "={{ $('Basic LLM Chain').item.json.output.recommendation }}",
+            "Reason": "={{ $('Basic LLM Chain').item.json.output.reason }}",
+            "screening date": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Candidate Name",
+              "displayName": "Candidate Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Education",
+              "displayName": "Education",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Experience Years",
+              "displayName": "Experience Years",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Technical Skills",
+              "displayName": "Technical Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Matching Required Skills",
+              "displayName": "Matching Required Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing Required Skills",
+              "displayName": "Missing Required Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Matching Preferred Skills",
+              "displayName": "Matching Preferred Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Strengths",
+              "displayName": "Strengths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Weaknesses",
+              "displayName": "Weaknesses",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recommendation",
+              "displayName": "Recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screening date",
+              "displayName": "screening date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1408,
+        0
+      ],
+      "id": "16b86325-9bbf-4cc6-84c2-7894e348bd10",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "s3KJloaOysfg5RS5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jtGE6_p3qD8KrfZGXT4cg2Ilb4HfGSoqbYz_T8eKgJc",
+          "mode": "list",
+          "cachedResultName": "AI Resume Screening Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jtGE6_p3qD8KrfZGXT4cg2Ilb4HfGSoqbYz_T8eKgJc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Candidates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jtGE6_p3qD8KrfZGXT4cg2Ilb4HfGSoqbYz_T8eKgJc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Candidate Name": "={{ $('Basic LLM Chain').item.json.output.candidate_name }}",
+            "Email": "={{ $('Basic LLM Chain').item.json.output.email }}",
+            "Phone": "={{ $('Basic LLM Chain').item.json.output.phone }}",
+            "Education": "={{ $('Basic LLM Chain').item.json.output.education }}",
+            "Experience Years": "={{ $('Basic LLM Chain').item.json.output.experience_years }}",
+            "Technical Skills": "={{ $('Basic LLM Chain').item.json.output.technical_skills }}",
+            "Matching Required Skills": "={{ $('Basic LLM Chain').item.json.output.matching_required_skills }}",
+            "Missing Required Skills": "={{ $('Basic LLM Chain').item.json.output.missing_required_skills }}",
+            "Matching Preferred Skills": "={{ $('Basic LLM Chain').item.json.output.matching_preferred_skills }}",
+            "Strengths": "={{ $('Basic LLM Chain').item.json.output.strengths }}",
+            "Weaknesses": "={{ $('Basic LLM Chain').item.json.output.weaknesses }}",
+            "Score": "={{ $('Basic LLM Chain').item.json.output.score }}",
+            "Recommendation": "={{ $('Basic LLM Chain').item.json.output.recommendation }}",
+            "Reason": "={{ $('Basic LLM Chain').item.json.output.reason }}",
+            "screening date": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Candidate Name",
+              "displayName": "Candidate Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Education",
+              "displayName": "Education",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Experience Years",
+              "displayName": "Experience Years",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Technical Skills",
+              "displayName": "Technical Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Matching Required Skills",
+              "displayName": "Matching Required Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing Required Skills",
+              "displayName": "Missing Required Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Matching Preferred Skills",
+              "displayName": "Matching Preferred Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Strengths",
+              "displayName": "Strengths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Weaknesses",
+              "displayName": "Weaknesses",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recommendation",
+              "displayName": "Recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screening date",
+              "displayName": "screening date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1408,
+        128
+      ],
+      "id": "65eba340-47f0-4866-b82f-0cfdb3741848",
+      "name": "Append row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "s3KJloaOysfg5RS5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ghaziaks05@gmail.com",
+        "subject": "=New Candidate Shortlisted — {{ $json['Candidate Name'] }}",
+        "emailType": "text",
+        "message": "=Hello,  A new candidate has been shortlisted by the AI Resume Screening System.  CANDIDATE INFORMATION ---------------------  Name: {{ $json['Candidate Name'] }}  Email: {{ $json.Email }}  Phone: {{ $json.Phone }}  Education: {{ $json.Education }}  Experience: {{ $json['Experience Years'] }} years   SCREENING RESULT ----------------  Score: {{ $('Basic LLM Chain').item.json.output.score }}/100  Recommendation: {{ $json.Recommendation }}  MATCHING REQUIRED SKILLS ------------------------  {{ $('Basic LLM Chain').item.json.output.matching_required_skills }}   MISSING REQUIRED SKILLS -----------------------  {{ $('Basic LLM Chain').item.json.output.missing_required_skills }}   MATCHING PREFERRED SKILLS -------------------------  {{ $json['Matching Preferred Skills'] }}  WEAKNESSES ----------    {{ $('Basic LLM Chain').item.json.output.weaknesses }} AI SCREENING REASON -------------------   {{ $('Basic LLM Chain').item.json.output.reason }}  Screening Date: {{ $now }}  This candidate was automatically screened by the AI Resume Screening System.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        -160
+      ],
+      "id": "cdf70423-9948-445d-be09-640c397c6efd",
+      "name": "Send a message",
+      "webhookId": "442f2744-1cfc-4db7-baee-789d371a1b32",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QHseG8VxhFUt6izg",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ghaziaks05@gmail.com",
+        "subject": "=Candidate Requires HR Review — {{ $('Basic LLM Chain').item.json.output.candidate_name }}",
+        "emailType": "text",
+        "message": "=Hello,  The AI Resume Screening System has identified a candidate who requires human review.  CANDIDATE ---------  Name: {{ $('Basic LLM Chain').item.json.output.candidate_name }} Email: {{ $('Basic LLM Chain').item.json.output.email }}  Phone:  {{ $('Basic LLM Chain').item.json.output.phone }} Education:{{ $('Basic LLM Chain').item.json.output.education }}   Experience: {{ $('Basic LLM Chain').item.json.output.experience_years }} years   AI SCREENING RESULT -------------------  Score: {{ $('Basic LLM Chain').item.json.output.score }}/100  Recommendation: {{ $('Basic LLM Chain').item.json.output.recommendation }}   MATCHING REQUIRED SKILLS ------------------------  {{ $('Basic LLM Chain').item.json.output.matching_required_skills }}   MISSING REQUIRED SKILLS -----------------------  {{ $('Basic LLM Chain').item.json.output.missing_required_skills }}   STRENGTHS ---------  {{ $('Basic LLM Chain').item.json.output.strengths }}  WEAKNESSES ------------ {{ $('Basic LLM Chain').item.json.output.weaknesses }}   AI REASON ---------  {{ $('Basic LLM Chain').item.json.output.reason }}   ACTION REQUIRED ---------------  Please manually review this candidate and decide whether to:  1. Shortlist 2. Reject 3. Request additional information  The AI recommendation is only an initial screening decision. Final hiring decisions should be made by a human recruiter.  Screening Date: {{ $now }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        0
+      ],
+      "id": "df02e41d-0bf6-4f32-a03e-4f154a5367f9",
+      "name": "Send a message1",
+      "webhookId": "e95d6225-e7e7-49c6-8aa4-40205a2ec3fb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QHseG8VxhFUt6izg",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4ced0867-f082-4ced-9d64-4384d71bcc38",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f1eaa398250805bb48ff8807fca555385123943c3be6996a85e9e70aaae1de9c"
+  },
+  "nodeGroups": [],
+  "id": "DLlgzg84O5mpDE4a",
+  "tags": []
+}
