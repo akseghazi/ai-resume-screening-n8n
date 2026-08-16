@@ -170,7 +170,7 @@ Sheets     Sheets   Sheets
 
 ### Candidate Database
 
-
+![image alt](https://github.com/akseghazi/ai-resume-screening-n8n/blob/189221dcdd945c7b9409ec8ab14b472e5836cdc1/screenshots/result%20of%20workflow.jpg)
 
 ### Dynamic Job Description
 ![image alt](https://github.com/akseghazi/ai-resume-screening-n8n/blob/21db74de8d3e4925483399d8d05345b038dcb313/screenshots/dynamic%20job%20description.jpg)
